@@ -6,7 +6,7 @@ from langchain.tools import BaseTool
 class ListProjectsCardsMilestonesTool(BaseTool):
     name: str = "list_projects_cards_milestones"
     description: str = (
-        "Fetches all GitHub Projects V2, repositories, milestones, and issues for a given organization.\n"
+        "Fetches all GitHub Projects V2, repositories, milestones, and issues (with developers) for a given organization.\n"
         "Input: GitHub organization login."
     )
 
@@ -22,7 +22,7 @@ class ListProjectsCardsMilestonesTool(BaseTool):
 
         organization = organization.strip().replace("`", "").replace("\n", "")
 
-        # GraphQL para listar somente projetos da organização
+        # GraphQL para listar projetos
         org_projects_query = """
         query($login: String!) {
           organization(login: $login) {
@@ -40,7 +40,7 @@ class ListProjectsCardsMilestonesTool(BaseTool):
         }
         """
 
-        # GraphQL para pegar repositórios associados a um projeto
+        # GraphQL para repositórios associados a projeto
         project_repositories_query = """
         query($projectId: ID!) {
           node(id: $projectId) {
@@ -56,7 +56,7 @@ class ListProjectsCardsMilestonesTool(BaseTool):
         }
         """
 
-        # GraphQL para pegar milestones e issues de um repositório
+        # GraphQL para milestones e issues (agora com criador e assignee)
         repo_milestones_query = """
         query($owner: String!, $repo: String!) {
           repository(owner: $owner, name: $repo) {
@@ -77,6 +77,14 @@ class ListProjectsCardsMilestonesTool(BaseTool):
                     createdAt
                     closedAt
                     url
+                    creator {
+                      login
+                    }
+                    assignees(first: 5) {
+                      nodes {
+                        login
+                      }
+                    }
                   }
                 }
               }
@@ -85,7 +93,7 @@ class ListProjectsCardsMilestonesTool(BaseTool):
         }
         """
 
-        # Helper: executar query GraphQL
+        # Função auxiliar para rodar queries
         def run_query(query_text: str, variables: Dict[str, Any]) -> Dict[str, Any]:
             response = requests.post(
                 "https://api.github.com/graphql",
@@ -96,10 +104,10 @@ class ListProjectsCardsMilestonesTool(BaseTool):
             response.raise_for_status()
             return response.json()
 
-        # Buscar projetos da organização
+        # Buscar projetos
         projects_data = run_query(org_projects_query, {"login": organization})
-
         org_projects = projects_data.get("data", {}).get("organization", {}).get("projectsV2", {}).get("nodes", [])
+
         if not org_projects:
             raise ValueError(f"Nenhum projeto encontrado para a organização '{organization}'.")
 
@@ -115,7 +123,7 @@ class ListProjectsCardsMilestonesTool(BaseTool):
                 "repositories": []
             }
 
-            # Buscar repositórios associados ao projeto
+            # Buscar repositórios
             repos_data = run_query(project_repositories_query, {"projectId": project["id"]})
             repositories = repos_data.get("data", {}).get("node", {}).get("repositories", {}).get("nodes", [])
 
@@ -128,10 +136,9 @@ class ListProjectsCardsMilestonesTool(BaseTool):
                     "milestones": []
                 }
 
-                # Buscar milestones e issues do repositório
+                # Buscar milestones e issues (com devs)
                 try:
-                    owner = organization  # como estamos focando em organization
-                    repo_milestone_data = run_query(repo_milestones_query, {"owner": owner, "repo": repo_name})
+                    repo_milestone_data = run_query(repo_milestones_query, {"owner": organization, "repo": repo_name})
                     milestones = repo_milestone_data.get("data", {}).get("repository", {}).get("milestones", {}).get("nodes", [])
                 except Exception:
                     milestones = []
@@ -156,7 +163,9 @@ class ListProjectsCardsMilestonesTool(BaseTool):
                             "state": issue.get("state"),
                             "createdAt": issue.get("createdAt"),
                             "closedAt": issue.get("closedAt"),
-                            "url": issue.get("url")
+                            "url": issue.get("url"),
+                            "creator": issue.get("creator", {}).get("login", "Desconhecido"),
+                            "assignees": [assignee.get("login", "Desconhecido") for assignee in issue.get("assignees", {}).get("nodes", [])]
                         })
 
                     repo_entry["milestones"].append(milestone_entry)
