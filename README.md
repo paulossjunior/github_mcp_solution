@@ -19,19 +19,33 @@ Este projeto implementa um servidor **MCP** (Model Context Protocol) usando **Fa
 ## 📦 Estrutura do Projeto
 
 ```
-github-milestones-mcp/
-├── main.py
-├── mcp_server.py
-├── requirements.txt
-├── Makefile
-├── .env
-├── tools/
-│   ├── __init__.py
-│   ├── github_repository_tool.py
-│   ├── github_issue_tool.py
-│   ├── markdown_generator_tool.py
-│   ├── generate_report_tool.py
+├── LICENSE
+├── makefile
+├── README.md
+└── src
+    ├── application.py
+    ├── __init__.py
+    ├── mcp_server.py
+    ├── requirements.txt
+    └── tools
+        ├── generate_report_tool.py
+        ├── github_issue_tool.py
+        ├── github_repository_tool.py
+        ├── __init__.py
+        ├── list_all_milestones_and_issues_tool.py
 ```
+
+## 📜 Descrição dos Principais Arquivos
+
+- `application.py` - Inicialização da aplicação MCP Server.
+- `mcp_server.py` - Implementação do servidor MCP usando LangChain.
+- `requirements.txt` - Dependências Python necessárias para rodar o projeto.
+- `makefile` - Comandos úteis para build, teste e execução.
+- `tools/` - Conjunto de ferramentas integradas:
+  - `generate_report_tool.py` - Gera relatórios Markdown completos de milestones e issues.
+  - `github_issue_tool.py` - Busca issues específicas de milestones no GitHub.
+  - `github_repository_tool.py` - Lista repositórios de um usuário ou organização.
+  - `list_all_milestones_and_issues_tool.py` - Lista todos milestones e issues de um repositório.
 
 ---
 
