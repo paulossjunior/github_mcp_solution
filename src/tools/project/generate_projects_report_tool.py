@@ -10,7 +10,9 @@ class GenerateProjectsReportTool(BaseTool):
     )
 
     def _run(self, organization: str) -> str:
+        
         list_tool = ListProjectsCardsMilestonesTool()
+
         projects_data = list_tool._run(organization)
 
         if not isinstance(projects_data, dict) or "projects" not in projects_data:
