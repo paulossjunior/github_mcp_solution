@@ -6,7 +6,10 @@ from tools.github_repository_tool import GitHubRepositoryTool
 from tools.github_issue_tool import GitHubIssueTool
 from tools.generate_report_tool import GenerateReportTool
 from tools.list_all_milestones_and_issues_tool import ListAllMilestonesAndIssuesTool
-
+from tools.generate_developer_report_tool import  GenerateDevelopersReportTool
+from tools.github_projects_tool import GitHubProjectsV2Tool
+from tools.list_projects_cards_milestones_tool import ListProjectsCardsMilestonesTool
+from tools.generate_projects_report_tool import GenerateProjectsReportTool
 import os
 from dotenv import load_dotenv
 
@@ -27,7 +30,11 @@ tools = [
     GitHubRepositoryTool(),
     GitHubIssueTool(),
     GenerateReportTool(),
-    ListAllMilestonesAndIssuesTool()
+    ListAllMilestonesAndIssuesTool(),
+    GenerateDevelopersReportTool(),
+    GitHubProjectsV2Tool(),
+    ListProjectsCardsMilestonesTool(),
+    GenerateProjectsReportTool()
 ]
 
 
