@@ -201,15 +201,12 @@ class GithHubProjectRepository():
           
         except Exception:
           result = []
-        
-        
 
         return result
     
 
     def get_projects_milestones_issues(self,token, login) -> Dict[str, List[Dict[str, Any]]]:
          
-        
         
         projects_data = self.get_all(token=token, login=login)
         if not projects_data:
@@ -229,55 +226,14 @@ class GithHubProjectRepository():
             }
 
             # Buscar repositórios
-            repos_data = self.get_project_repository(token=token,login={"projectId": project["id"]})
+            repositories = self.get_project_repository(token=token,login={"projectId": project["id"]})
+            project_entry["repositories"].extends(repositories)
+
+            for repository in repositories:
+              milestones =  self.get_project_milestone_issue(token=token,login={"owner": login, "repo": repository['name']})
+              repository["milestones"].extend(milestones)
             
-            repositories = repos_data.get("data", {}).get("node", {}).get("repositories", {}).get("nodes", [])
-
-            for repo in repositories:
-                repo_name = repo.get("name")
-                repo_url = repo.get("url")
-                repo_entry = {
-                    "name": repo_name,
-                    "url": repo_url,
-                    "milestones": []
-                }
-
-                # Buscar milestones e issues (com devs)
-                try:
-                    repo_milestone_data = self.get_project_milestone_issue(token=token,login={"owner": login, "repo": repo_name}) 
-                    milestones = repo_milestone_data.get("data", {}).get("repository", {}).get("milestones", {}).get("nodes", [])
-                except Exception:
-                    milestones = []
-
-                for milestone in milestones:
-                    milestone_entry = {
-                        "number": milestone.get("number"),
-                        "title": milestone.get("title"),
-                        "description": milestone.get("description"),
-                        "dueOn": milestone.get("dueOn"),
-                        "state": milestone.get("state"),
-                        "createdAt": milestone.get("createdAt"),
-                        "updatedAt": milestone.get("updatedAt"),
-                        "issues": []
-                    }
-
-                    issues = milestone.get("issues", {}).get("nodes", [])
-                    for issue in issues:
-                        milestone_entry["issues"].append({
-                            "number": issue.get("number"),
-                            "title": issue.get("title"),
-                            "state": issue.get("state"),
-                            "createdAt": issue.get("createdAt"),
-                            "closedAt": issue.get("closedAt"),
-                            "url": issue.get("url"),
-                            "creator": issue.get("creator", {}).get("login", "Desconhecido"),
-                            "assignees": [assignee.get("login", "Desconhecido") for assignee in issue.get("assignees", {}).get("nodes", [])]
-                        })
-
-                    repo_entry["milestones"].append(milestone_entry)
-
-                project_entry["repositories"].append(repo_entry)
-
+            
             result.append(project_entry)
           
         return result
