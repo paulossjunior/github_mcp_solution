@@ -31,29 +31,52 @@ class GenerateReportTool(BaseTool):
                 "Desculpe, não foi possível gerar o relatório em Markdown pois nenhum milestone foi encontrado."
             )
 
-        markdown = f"# 📋 Relatório de Milestones e Issues do Repositório {query}"
+        # Começa relatório
+        markdown = f"# 📋 Relatório de Milestones e Issues do Repositório {query}\n\n"
+
+        # --- RESUMO dos milestones
+        markdown += "## 📈 Resumo dos Milestones\n\n"
+        markdown += "| Número | Título | Criado em | Entrega Prevista | Tarefas Concluídas | Tarefas Abertas |\n"
+        markdown += "|:------:|:-------|:----------|:-----------------|:------------------:|:---------------:|\n"
 
         for m in milestones:
-            markdown += f"## 📌 Milestone {m.get('number')} - {m.get('title')} ({m.get('state')})"
-            markdown += f"- Criado em: {m.get('created_at')}"
-            due = m.get('due_on') or 'N/A'
-            markdown += f"- Entrega prevista: {due}"
+            milestone_number = m.get('number')
+            milestone_title = m.get('title')
+            created_at = m.get('created_at')
+            due_on = m.get('due_on') or 'N/A'
 
-            # Filtra issues relacionadas a este milestone
+            # Filtra issues relacionadas
+            related_issues = [i for i in issues if i.get('milestone_number') == milestone_number]
+
+            # Conta issues concluídas e abertas
+            closed_count = sum(1 for i in related_issues if i.get('state') == 'closed')
+            open_count = sum(1 for i in related_issues if i.get('state') != 'closed')
+
+            markdown += f"| {milestone_number} | {milestone_title} | {created_at} | {due_on} | {closed_count} | {open_count} |\n"
+
+        # --- Detalhamento de milestones e issues
+        markdown += "\n## 📋 Detalhamento dos Milestones e Issues\n\n"
+
+        for m in milestones:
+            markdown += f"### 📌 Milestone {m.get('number')} - {m.get('title')} ({m.get('state')})\n"
+            markdown += f"- Criado em: {m.get('created_at')}\n"
+            due = m.get('due_on') or 'N/A'
+            markdown += f"- Entrega prevista: {due}\n\n"
+
             related = [i for i in issues if i.get('milestone_number') == m.get('number')]
             if related:
-                markdown += "| Status | Título | Criado por | Atribuído para | Criada em | Fechada em |"
-                markdown += "|:------:|:-------|:-----------|:---------------|:---------|:-----------|"
+                markdown += "| Status | Título | Criado por | Atribuído para | Criada em | Fechada em |\n"
+                markdown += "|:------:|:-------|:-----------|:---------------|:---------|:-----------|\n"
                 for i in related:
                     status_emoji = "✅" if i.get('state') == "closed" else "🚧"
-                    closed = i.get('closed_at') or "-"
+                    closed_at = i.get('closed_at') or "-"
                     markdown += (
                         f"| {status_emoji} | {i.get('title')} | {i.get('creator')} | {i.get('assignee')} | "
-                        f"{i.get('created_at')} | {closed} |"
+                        f"{i.get('created_at')} | {closed_at} |\n"
                     )
-                markdown += ""
+                markdown += "\n"
             else:
-                markdown += "Nenhuma issue para este milestone."
+                markdown += "Nenhuma issue para este milestone.\n\n"
 
         return markdown
 
