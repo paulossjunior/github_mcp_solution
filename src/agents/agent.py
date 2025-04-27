@@ -1,7 +1,7 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import initialize_agent, AgentType
 from langchain.memory import ConversationBufferMemory
-from src.tools.repository.github_milestones_tool import GitHubMilestoneTool
+from tools.repository.github_milestones_tool import GitHubMilestoneTool
 from tools.repository.github_issue_tool import GitHubIssueTool
 from tools.repository.generate_report_tool import GenerateReportTool
 from tools.repository.list_all_milestones_and_issues_tool import ListAllMilestonesAndIssuesTool

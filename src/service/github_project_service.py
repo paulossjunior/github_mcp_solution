@@ -1,5 +1,5 @@
 from typing import List, Dict, Optional, Any
-from repository.project_repository import GithHubProjectRepository
+from repository.github_project_repository import GithHubProjectRepository
 
 class GitHubProjectService():
 
