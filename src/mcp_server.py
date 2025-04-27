@@ -4,10 +4,12 @@ from langchain.agents import initialize_agent, AgentType
 from langchain.memory import ConversationBufferMemory
 from tools.github_repository_tool import GitHubRepositoryTool
 from tools.github_issue_tool import GitHubIssueTool
-from tools.markdown_generator_tool import MarkdownGeneratorTool
 from tools.generate_report_tool import GenerateReportTool
+from tools.list_all_milestones_and_issues_tool import ListAllMilestonesAndIssuesTool
+
 import os
 from dotenv import load_dotenv
+
 
 load_dotenv()
 
@@ -24,7 +26,8 @@ memory = ConversationBufferMemory(memory_key="chat_history", return_messages=Tru
 tools = [
     GitHubRepositoryTool(),
     GitHubIssueTool(),
-    GenerateReportTool()  
+    GenerateReportTool(),
+    ListAllMilestonesAndIssuesTool()
 ]
 
 
