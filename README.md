@@ -114,6 +114,9 @@ curl -X POST http://localhost:3000/v1/mcp \
 curl -X POST http://localhost:3000/v1/mcp \
 -H "Content-Type: application/json" \
 -d '{"input": "me retone um relatório em Markdown do repositorio octocat/Hello-World"}'
+```
+
+```bash
 
 curl -X POST http://localhost:3000/v1/mcp -H "Content-Type: application/json" -d '{"input": "me forneça o relatório do repositório octocat/Hello-World ordenado pelo numero do milestone e coloque as datas no formato brasileiro"}'
 ```
