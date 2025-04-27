@@ -117,7 +117,18 @@ class GithHubProjectRepository():
           }
         }
         """
-        return self.__run_graphql_query(query, login, token)
+        data = self.__run_graphql_query(query, login, token)
+
+        repositories = data.get("data", {}).get("node", {}).get("repositories", {}).get("nodes", [])
+        result = []
+        for repo in repositories:
+          repo_entry = {
+                "name": repo.get("name"),
+                "url": repo.get("url"),
+                "milestones": []
+            }
+          result.append (repo_entry)
+        return result
     
     def get_project_milestone_issue (self, token, login)-> Optional[List[Dict[str, str]]]:
         # GraphQL para milestones e issues (agora com criador e assignee)
@@ -141,7 +152,7 @@ class GithHubProjectRepository():
                     createdAt
                     closedAt
                     url
-                    creator {
+                    author {
                       login
                     }
                     assignees(first: 5) {
@@ -156,7 +167,44 @@ class GithHubProjectRepository():
           }
         }
         """
-        return self.__run_graphql_query(query, login, token)
+
+        data = self.__run_graphql_query(query, login, token)
+        try:
+          milestones = data.get("data", {}).get("repository", {}).get("milestones", {}).get("nodes", [])
+          result = []
+          for milestone in milestones:
+              milestone_entry = {
+                "number": milestone.get("number"),
+                "title": milestone.get("title"),
+                "description": milestone.get("description"),
+                "dueOn": milestone.get("dueOn"),
+                "state": milestone.get("state"),
+                "createdAt": milestone.get("createdAt"),
+                "updatedAt": milestone.get("updatedAt"),
+                "issues": []
+              }
+
+              issues = milestone.get("issues", {}).get("nodes", [])
+              for issue in issues:
+                milestone_entry["issues"].append({
+                  "number": issue.get("number"),
+                  "title": issue.get("title"),
+                  "state": issue.get("state"),
+                  "createdAt": issue.get("createdAt"),
+                  "closedAt": issue.get("closedAt"),
+                  "url": issue.get("url"),
+                  "creator": issue.get("creator", {}).get("login", "Desconhecido"),
+                  "assignees": [assignee.get("login", "Desconhecido") for assignee in issue.get("assignees", {}).get("nodes", [])]
+                })
+              result.append(milestone_entry)
+
+          
+        except Exception:
+          result = []
+        
+        
+
+        return result
     
 
     def get_projects_milestones_issues(self,token, login) -> Dict[str, List[Dict[str, Any]]]:

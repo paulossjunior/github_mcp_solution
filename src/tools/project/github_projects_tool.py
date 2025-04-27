@@ -1,5 +1,4 @@
 import os
-import requests
 from langchain.tools import BaseTool
 from typing import List, Dict, Optional
 from service.github_project_service import GitHubProjectService
