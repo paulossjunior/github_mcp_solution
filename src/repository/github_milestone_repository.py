@@ -8,6 +8,7 @@ class GitHubMilestoneRepository():
         headers = {"Authorization": f"token {token}"}
 
         url = f"https://api.github.com/repos/{repo_path}/milestones"
+        
         response = requests.get(url, headers=headers)
         if response.status_code != 200:
             raise Exception(f"GitHub API error {response.status_code}: {response.text}")

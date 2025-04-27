@@ -13,9 +13,12 @@ class GenerateReportTool(BaseTool):
     )
 
     def _run(self, query: str) -> str:
+        
         # Chama a ferramenta que lista todos milestones e issues
+        
         list_tool = ListAllMilestonesAndIssuesTool()
         raw = list_tool._run(query)
+
         # Se veio como string JSON, converte para dict
         try:
             data = json.loads(raw) if isinstance(raw, str) else raw

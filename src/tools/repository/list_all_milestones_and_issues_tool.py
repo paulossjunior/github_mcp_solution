@@ -1,7 +1,6 @@
-import os
 from typing import List, Dict, Any
 from langchain.tools import BaseTool
-from .github_repository_tool import GitHubRepositoryTool
+from .github_milestones_tool import GitHubMilestoneTool
 from .github_issue_tool import GitHubIssueTool
 
 class ListAllMilestonesAndIssuesTool(BaseTool):
@@ -23,14 +22,16 @@ class ListAllMilestonesAndIssuesTool(BaseTool):
             raise ValueError(f"Formato inválido: '{repo_path}'. Esperado 'owner/repo'.")
 
         # Usar GitHubRepositoryTool para obter milestones
-        repo_tool = GitHubRepositoryTool()
+        repo_tool = GitHubMilestoneTool()
         milestones = repo_tool._run(repo_path)
 
         # Usar GitHubIssueTool para obter issues de cada milestone
         issue_tool = GitHubIssueTool()
+
         all_issues: List[Dict[str, Any]] = []
-        for m in milestones:
-            number = m.get("number")
+        
+        for milestone in milestones:
+            number = milestone.get("number")
             if number is None:
                 continue
             # Monta input para issues: 'owner/repo/number'
@@ -39,7 +40,7 @@ class ListAllMilestonesAndIssuesTool(BaseTool):
             # Adiciona metadata do milestone em cada issue
             for issue in issues:
                 issue["milestone_number"] = number
-                issue["milestone_title"] = m.get("title")
+                issue["milestone_title"] = milestone.get("title")
                 all_issues.append(issue)
 
         return {

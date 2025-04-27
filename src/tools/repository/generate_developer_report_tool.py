@@ -12,6 +12,7 @@ class GenerateDevelopersReportTool(BaseTool):
     )
 
     def _run(self, query: str) -> str:
+        
         # Chama a ferramenta que lista todos milestones e issues
         list_tool = ListAllMilestonesAndIssuesTool()
         raw = list_tool._run(query)
