@@ -1,9 +1,6 @@
 from langchain.tools import BaseTool
-from typing import Dict, Any
+from typing import Any
 import json
-from dotenv import load_dotenv
-
-load_dotenv()
 
 class GenerateReportTool(BaseTool):
     name: str = "generate_full_markdown_report"
@@ -14,28 +11,30 @@ class GenerateReportTool(BaseTool):
         issues = []
 
         for message in chat_history:
-            content = message.content
+            content = message.content.strip()
+
             if content.startswith("milestones:"):
                 try:
-                    milestones_data = content.replace("milestones:", "").strip()
-                    milestones = json.loads(milestones_data.replace("'", '"'))
+                    json_text = content[len("milestones:"):].strip()
+                    milestones = json.loads(json_text)
                 except Exception as e:
-                    print(f"Erro carregando milestones: {e}")
+                    print(f"Erro ao carregar milestones: {e}")
+
             if content.startswith("issues:"):
                 try:
-                    issues_data = content.replace("issues:", "").strip()
-                    issues = json.loads(issues_data.replace("'", '"'))
+                    json_text = content[len("issues:"):].strip()
+                    issues = json.loads(json_text)
                 except Exception as e:
-                    print(f"Erro carregando issues: {e}")
+                    print(f"Erro ao carregar issues: {e}")
 
         if not milestones:
             return "Nenhum milestone encontrado para gerar relatório."
 
-        # Gerar Markdown na mão (igual MarkdownGenerator)
+        # Gerar o relatório
         markdown = "# 📋 Relatório de Milestones e Issues\n\n"
 
         for m in milestones:
-            markdown += f"## 📌 {m['title']}\n"
+            markdown += f"## 📌 Milestone {m['number']} - {m['title']}\n"
             markdown += f"- Criado em: {m['created_at']}\n"
             markdown += f"- Entrega prevista: {m['due_on']}\n"
             markdown += f"- Estado: {m['state']}\n\n"

@@ -2,34 +2,38 @@ import os
 import requests
 from langchain.tools import BaseTool
 from typing import List, Dict, Optional
-from dotenv import load_dotenv
+import json
 
-load_dotenv()
 class GitHubRepositoryTool(BaseTool):
     name: str = "get_github_milestones"
-    description: str = "Fetches milestones from a GitHub repository. Input: 'owner/repo'. Saves milestones to memory."
+    description: str = "Fetches milestones from a GitHub repository. Input: 'owner/repo'. Returns milestones as JSON string including number."
 
     def _run(self, query: str) -> str:
-        from langchain.callbacks.manager import CallbackManagerForToolRun
-        from langchain.schema import SystemMessage
-
         token = os.getenv("GITHUB_TOKEN")
         headers = {"Authorization": f"token {token}"}
 
-        try:
-            owner, repo = query.split("/")
-        except ValueError:
-            raise ValueError("Input must be 'owner/repo'.")
+        # Se o input for lista, pega o primeiro elemento
+        if isinstance(query, list):
+            query = query[0]
 
-        url = f"https://api.github.com/repos/{owner}/{repo}/milestones"
-        print (url)
+        # Limpar crases e espaços extras
+        repo_path = query.replace("`", "").replace("\n", "").strip()
+
+        # Validar formato
+        if "/" not in repo_path:
+            raise ValueError(f"Formato inválido: '{repo_path}'. Esperado 'owner/repo'.")
+
+        url = f"https://api.github.com/repos/{repo_path}/milestones"
         response = requests.get(url, headers=headers)
+
         if response.status_code != 200:
-            raise Exception(f"GitHub API error: {response.status_code}")
+            raise Exception(f"GitHub API error {response.status_code}: {response.text}")
 
         milestones = response.json()
+
         formatted = [
             {
+                "number": m.get("number", 0),  # <-- Agora inclui o número do milestone!
                 "title": m.get("title", ""),
                 "created_at": m.get("created_at", ""),
                 "due_on": m.get("due_on", ""),
@@ -38,14 +42,7 @@ class GitHubRepositoryTool(BaseTool):
             for m in milestones
         ]
 
-        # Armazenar como SystemMessage
-        system_message = SystemMessage(content=f"milestones: {formatted}")
-        CallbackManagerForToolRun.on_chat_model_start(
-            {},  # Sem kwargs
-            [system_message]
-        )
-
-        return f"{len(formatted)} milestones armazenados."
+        return f"milestones: {json.dumps(formatted)}"
 
     def _arun(self, query: str) -> Optional[str]:
         raise NotImplementedError("Async not supported.")
