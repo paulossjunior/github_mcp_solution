@@ -1,7 +1,7 @@
 import os
-import requests
 from langchain.tools import BaseTool
-from typing import List, Dict, Optional
+from typing import List, Dict
+from service.github_issue_service import GitHubIssueService
 
 class GitHubIssueTool(BaseTool):
     name: str = "get_github_issues"
@@ -11,7 +11,6 @@ class GitHubIssueTool(BaseTool):
 
     def _run(self, query: str) -> List[Dict[str, str]]:
         token = os.getenv("GITHUB_TOKEN")
-        headers = {"Authorization": f"token {token}"}
 
         if isinstance(query, list):
             query = query[0]
@@ -19,34 +18,15 @@ class GitHubIssueTool(BaseTool):
         repo_query = query.replace("`", "").replace("\n", "").strip()
 
         try:
-            owner_repo, milestone_str = repo_query.rsplit("/", 1)
+            repo_path, milestone_str = repo_query.rsplit("/", 1)
             milestone_number = int(milestone_str)
         except ValueError:
             raise ValueError("Input inválido. Esperado formato 'owner/repo/milestone_number'.")
 
-        url = f"https://api.github.com/repos/{owner_repo}/issues"
-        params = {"milestone": milestone_number, "state": "all"}
-
-        response = requests.get(url, headers=headers, params=params)
-        if response.status_code != 200:
-            raise Exception(f"GitHub API error {response.status_code}: {response.text}")
-
-        issues_data = response.json()
-        formatted: List[Dict[str, str]] = []
-        for i in issues_data:
-            assignee_info = i.get("assignee")
-            assignee_login = assignee_info.get("login") if assignee_info else "Não atribuído"
-            creator_login = i.get("user", {}).get("login", "Desconhecido")
-
-            formatted.append({
-                "title": i.get("title", ""),
-                "state": i.get("state", ""),
-                "created_at": i.get("created_at", ""),
-                "closed_at": i.get("closed_at", ""),
-                "creator": creator_login,
-                "assignee": assignee_login
-            })
-
+        token = os.getenv("GITHUB_TOKEN")
+        service = GitHubIssueService()
+        formatted = service.get_all(repo_path,milestone_number,token)
+        
         return formatted
 
     def _arun(self, query: str) -> List[Dict[str, str]]:
