@@ -4,7 +4,7 @@ import requests
 class GithHubProjectRepository():
 
     # Helper function to run the GraphQL
-    def __run_graphql_query(query_text: str, variables:str, token:str) -> Optional[List[Dict[str, str]]]:
+    def __run_graphql_query(self, query_text: str, variables:str, token:str) -> Optional[List[Dict[str, str]]]:
         try:
             
             headers = {
