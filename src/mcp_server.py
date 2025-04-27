@@ -34,9 +34,10 @@ tools = [
 agent = initialize_agent(
     tools=tools,
     llm=llm,
-    agent=AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
     memory=memory,
-    verbose=True
+    verbose=True,
+    return_direct=True
 )
 
 @app.post("/v1/mcp")
