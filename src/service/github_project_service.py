@@ -87,7 +87,7 @@ class GitHubProjectService():
                         closed_at = issue.get("closedAt")
                         status_emoji = "✅" if closed_at else "🚧"
                         closed_at = closed_at or "-"
-                        author = issue.get("author", {}).get("login", "Desconhecido")
+                        author = issue.get("author")
                         assignees = issue.get("assignees", [])
                         assignees_str = ", ".join(assignees) if assignees else "Não atribuído"
                         markdown += (

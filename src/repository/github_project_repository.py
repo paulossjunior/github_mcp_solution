@@ -107,7 +107,7 @@ class GithHubProjectRepository():
         query($projectId: ID!) {
           node(id: $projectId) {
             ... on ProjectV2 {
-              repositories(first: 20) {
+              repositories(first: 100) {
                 nodes {
                   name
                   url
@@ -135,7 +135,7 @@ class GithHubProjectRepository():
         query = """
         query($owner: String!, $repo: String!) {
           repository(owner: $owner, name: $repo) {
-            milestones(first: 20) {
+            milestones(first: 100) {
               nodes {
                 number
                 title
@@ -144,7 +144,7 @@ class GithHubProjectRepository():
                 state
                 createdAt
                 updatedAt
-                issues(first: 50) {
+                issues(first: 100) {
                   nodes {
                     number
                     title
@@ -193,7 +193,7 @@ class GithHubProjectRepository():
                   "createdAt": issue.get("createdAt"),
                   "closedAt": issue.get("closedAt"),
                   "url": issue.get("url"),
-                  "creator": issue.get("creator", {}).get("login", "Desconhecido"),
+                  "author": issue.get("author", {}).get("login", "Desconhecido"),
                   "assignees": [assignee.get("login", "Desconhecido") for assignee in issue.get("assignees", {}).get("nodes", [])]
                 })
               result.append(milestone_entry)
