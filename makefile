@@ -52,3 +52,5 @@ update:
 	@$(PIP) install --upgrade pip
 	@$(PIP) install --upgrade -r requirements.txt
 	@echo "Dependências atualizadas."
+test:
+	PYTHONPATH=src pytest src/

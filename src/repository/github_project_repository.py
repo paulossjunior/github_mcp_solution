@@ -227,7 +227,7 @@ class GithHubProjectRepository():
 
             # Buscar repositórios
             repositories = self.get_project_repository(token=token,login={"projectId": project["id"]})
-            project_entry["repositories"].extends(repositories)
+            project_entry["repositories"].extend(repositories)
 
             for repository in repositories:
               milestones =  self.get_project_milestone_issue(token=token,login={"owner": login, "repo": repository['name']})
