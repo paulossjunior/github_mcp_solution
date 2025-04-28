@@ -21,7 +21,7 @@ class ListProjectsCardsMilestonesTool(BaseTool):
 
         
         service = GitHubProjectService()
-        result = service.get_all(token=token, login=organization)
+        result = service.get_projects_milestones_issues(token=token, login=organization)
         
         return {"projects": result}
 
