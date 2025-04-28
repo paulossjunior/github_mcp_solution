@@ -1,38 +1,54 @@
-import os
-import requests
-from langchain.tools import BaseTool
-from typing import Dict, Any
-import json
-from .list_all_milestones_and_issues_tool import ListAllMilestonesAndIssuesTool
+from typing import List, Dict, Any
 
-class GenerateReportTool(BaseTool):
-    name: str = "generate_full_markdown_report"
-    description: str = (
-        "Fetches all milestones and issues for a given repo and generates a complete Markdown report. "
-        "Input: 'owner/repo'."
-    )
+class GitHubRepositoryService():
 
-    def _run(self, query: str) -> str:
-        # Chama a ferramenta que lista todos milestones e issues
-        list_tool = ListAllMilestonesAndIssuesTool()
-        raw = list_tool._run(query)
-        # Se veio como string JSON, converte para dict
-        try:
-            data = json.loads(raw) if isinstance(raw, str) else raw
-        except json.JSONDecodeError:
-            raise ValueError("Formato inválido retornado pela ferramenta de listagem.")
+    def generate_developer_markdown_report(self, issues:List, repository:str)-> str:
+        
+         # Agrupar issues por assignee
+        developers: Dict[str, List[Dict[str, Any]]] = {}
+        for issue in issues:
+            assignee = issue.get('assignee') or "Não atribuído"
+            developers.setdefault(assignee, []).append(issue)
 
-        # Extrai dados
-        milestones = data.get("milestones", []) if isinstance(data, dict) else []
-        issues = data.get("issues", []) if isinstance(data, dict) else []
+        # Começa o markdown
+        markdown = f"# 📋 Relatório de Desenvolvedores - Milestones e Issues do Repositório {repository}\n\n"
 
-        if not milestones:
-            return (
-                "Desculpe, não foi possível gerar o relatório em Markdown pois nenhum milestone foi encontrado."
-            )
+        # --- Resumo Geral ---
+        markdown += "## 📈 Resumo Geral\n\n"
+        markdown += "| Desenvolvedor | Issues Concluídas | Issues Abertas | Total de Issues | % Concluído |\n"
+        markdown += "|:--------------|:-----------------:|:--------------:|:---------------:|:-----------:|\n"
 
+        for dev, dev_issues in developers.items():
+            total = len(dev_issues)
+            closed = sum(1 for i in dev_issues if i.get('state') == 'closed')
+            open_ = total - closed
+            percent = (closed / total * 100) if total else 0.0
+            markdown += f"| {dev} | {closed} | {open_} | {total} | {percent:.1f}% |\n"
+
+        # --- Detalhamento por Desenvolvedor ---
+        markdown += "\n## 📋 Detalhamento por Desenvolvedor\n\n"
+
+        for dev, dev_issues in developers.items():
+            markdown += f"### 👤 {dev}\n\n"
+            markdown += "| Status | Título da Issue | Criada em | Fechada em |\n"
+            markdown += "|:------:|:----------------|:---------|:-----------|\n"
+
+            for issue in dev_issues:
+                status_emoji = "✅" if issue.get('state') == "closed" else "🚧"
+                title = issue.get('title', "Sem título")
+                created_at = issue.get('created_at', "-")
+                closed_at = issue.get('closed_at') or "-"
+                markdown += f"| {status_emoji} | {title} | {created_at} | {closed_at} |\n"
+
+            markdown += "\n"
+
+        return markdown
+
+
+    def generate_milestone_issue_markdown_report(self, milestones:List , issues:List, repository:str)-> str:
+        
         # Começa relatório
-        markdown = f"# 📋 Relatório de Milestones e Issues do Repositório {query}\n\n"
+        markdown = f"# 📋 Relatório de Milestones e Issues do Repositório {repository}\n\n"
 
         # --- RESUMO dos milestones
         markdown += "## 📈 Resumo dos Milestones\n\n"
@@ -79,6 +95,3 @@ class GenerateReportTool(BaseTool):
                 markdown += "Nenhuma issue para este milestone.\n\n"
 
         return markdown
-
-    def _arun(self, query: str) -> str:
-        raise NotImplementedError("Async not supported.")
