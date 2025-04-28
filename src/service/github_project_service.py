@@ -23,7 +23,6 @@ class GitHubProjectService():
 
         for project in projects_data["projects"]:
             markdown += f"## 🚀 Projeto: {project['title']}\n"
-            markdown += f"- **ID**: {project['id']}\n"
             markdown += f"- **Número**: {project['number']}\n"
             markdown += f"- **Criado em**: {project.get('created_at', 'N/A')}\n"
             markdown += f"- **Atualizado em**: {project.get('updated_at', 'N/A')}\n"
@@ -43,7 +42,7 @@ class GitHubProjectService():
             for repo in project["repositories"]:
                 for milestone in repo.get("milestones", []):
                     issues = milestone.get("issues", [])
-                    closed = sum(1 for issue in issues if issue["state"] == "closed")
+                    closed = sum(1 for issue in issues if issue["closedAt"])
                     open_ = len(issues) - closed
                     total = len(issues)
                     percent = (closed / total) * 100 if total > 0 else 0
@@ -85,13 +84,14 @@ class GitHubProjectService():
                     markdown += "|:------:|:----------------|:--------|:------------|:---------|:-----------|:----|\n"
 
                     for issue in milestone["issues"]:
-                        status_emoji = "✅" if issue["state"] == "closed" else "🚧"
-                        closed_at = issue.get("closedAt", "-")
-                        creator = issue.get("creator", "Desconhecido")
+                        closed_at = issue.get("closedAt")
+                        status_emoji = "✅" if closed_at else "🚧"
+                        closed_at = closed_at or "-"
+                        author = issue.get("author", {}).get("login", "Desconhecido")
                         assignees = issue.get("assignees", [])
                         assignees_str = ", ".join(assignees) if assignees else "Não atribuído"
                         markdown += (
-                            f"| {status_emoji} | {issue['title']} | {creator} | {assignees_str} | "
+                            f"| {status_emoji} | {issue['title']} | {author} | {assignees_str} | "
                             f"{issue['createdAt']} | {closed_at} | [Link]({issue['url']}) |\n"
                         )
 
